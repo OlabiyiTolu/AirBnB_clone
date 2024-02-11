@@ -1,34 +1,86 @@
+"""
+This class defines a base model framework for other classes,
+providing common attributes and methods for basic data management.
+"""
+
 import uuid
 from datetime import datetime
 
 class BaseModel:
-    """Base model that define that defines all common attributes/methods for other classes"""
-    def __init__(self):
-        self.id = str(uuid.uuid4())
-        self.created_at = datetime.now()
-        self.updated_at = datetime.now()
+    """
+    Base class for all model classes.
 
-    def __str__(self):
+    Attributes:
+        id (str): A unique identifier assigned using UUID.
+        created_at (datetime): Date and time of object creation.
+        updated_at (datetime): Date and time of last object update.
+
+    Methods:
+        save(self): Updates the `updated_at` attribute to the current datetime.
+        to_dict(self): Returns a dictionary representation of the object.
+        __str__(self): Returns a string representation of the object.
+    """
+
+    def __init__(self, *args, **kwargs):
         """
-        Represent the objects as a string
-        Class Name
-        Id in bracket
-        Dictionary of Attributes
+        Initializes a new Base Model instance.
+
+        Assigns unique IDs and timestamps upon creation.
         """
-        return f"[{self.__class__.__name__}] ({self.id}) {self.__dict__}"
-    
+        TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
+    # Handle initialization from dictionary argument
+        if kwargs:
+            for key, value in kwargs.items():
+                if key == "__class__":
+                    continue  # Ignore "__class__" key
+                elif key in ["created_at", "updated_at"]:
+                    try:
+                        setattr(self, key, datetime.strptime(value, TIME_FORMAT))
+                    except ValueError:
+                        raise ValueError(f"Invalid timestamp format for {key}: {value}")
+                else:
+                    setattr(self, key, value)
+
+            # ID is only set if not provided in kwargs
+            if "id" not in kwargs:
+                self.id = str(uuid.uuid4())
+        else:
+            self.id = str(uuid.uuid4())
+            
+            self.created_at = datetime.now()
+            self.updated_at = datetime.now()
+
     def save(self):
-        """Updates the public instance attribute updated_at with the current datetime"""
+        """
+        Updates the `updated_at` attribute to reflect object changes.
+
+        Used to indicate when an object's information has been modified.
+        """
         self.updated_at = datetime.now()
 
     def to_dict(self):
         """
-        Returns a dictionary containing all keys/values of __dict__ of the instance
-        Class must be added to this dictionary with the class name of the object
-        created_at and updated_at must be converted to string object in ISO format
+        Creates a dictionary representation of the object's attributes.
+
+        Includes class name, unique ID, and datetime attributes in ISO format.
+        Useful for serialization and data exchange.
+
+        Returns:
+            dict: A dictionary containing object attributes.
         """
-        dict_rep = self.__dict__.copy()
-        dict_rep['__class__'] = self.__class__.__name__
-        dict_rep['created_at'] = self.created_at.isoformat()
-        dict_rep['updated_at'] = self.updated_at.isoformat()
-        return dict_rep
+        self_dict = self.__dict__.copy()
+        self_dict["__class__"] = self.__class__.__name__
+        self_dict["created_at"] = self.created_at.isoformat()
+        self_dict["updated_at"] = self.updated_at.isoformat()
+        return self_dict
+
+    def __str__(self):
+        """
+        Provides a clear and informative string representation of the object.
+
+        Includes class name, unique ID, and a dictionary of instance attributes.
+
+        Returns:
+            str: A formatted string representation of the object.
+        """
+        return f"[{self.__class__.__name__}] ({self.id}) {self.__dict__}"
