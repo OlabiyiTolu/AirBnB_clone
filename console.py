@@ -1,45 +1,43 @@
 #!/usr/bin/env python3
 """
-AirBnB Console - Your Ultimate Command-Line Experience
+A command interpreter program for managing AirBnB objects.
 """
 
 import cmd
 import json
 import shlex
-from models import storage
 from models.base_model import BaseModel
-from datetime import datetime
 
 class HBNBCommand(cmd.Cmd):
     """
-    Welcome to AirBnB Console - Your Ultimate Command-Line Experience!
+    Custom command interpreter class for AirBnB objects.
     """
-    prompt = "\033[94m(AirBnB) \033[0m"
+    prompt = "(hbnb) "
+    valid_classes = ["BaseModel"]
 
     def emptyline(self):
         """
-        Do nothing on an empty line.
+        Do nothing on empty line.
         """
         pass
 
     def do_quit(self, arg):
         """
-        Exit the AirBnB Console.
+        Quit command to exit the program.
         """
-        print("\033[91mExiting AirBnB Console. Goodbye!\033[0m")
         return True
 
     def help_quit(self):
         """
         Help message for the quit command.
         """
-        print("Exit the AirBnB Console.")
+        print("Quit command to exit the program")
 
     def do_EOF(self, arg):
         """
         Exit on EOF (Ctrl-D).
         """
-        print("\n\033[91mExiting AirBnB Console. Goodbye!\033[0m")
+        print("")
         return True
 
     def help_EOF(self):
@@ -50,125 +48,144 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, arg):
         """
-        Create a new instance of BaseModel, save it (to the JSON file), and print the id.
+        Creates a new instance of BaseModel, saves it (to the JSON file) and prints the id.
         Usage: create <class name>
         """
         args = shlex.split(arg)
-        if not args:
-            print("\033[91m** Class name missing. Usage: create <class name> **\033[0m")
+        if len(args) == 0:
+            print("** class name missing **")
             return
         class_name = args[0]
-        if class_name not in storage.classes:
-            print("\033[91m** Class doesn't exist. **\033[0m")
+        if class_name not in self.valid_classes:
+            print("** class doesn't exist **")
             return
-        new_instance = storage.classes[class_name]()
+        new_instance = BaseModel()
         new_instance.save()
-        print("\033[92m{}\033[0m".format(new_instance.id))
+        print(new_instance.id)
 
     def do_show(self, arg):
         """
-        Print the string representation of an instance based on the class name and id.
+        Prints the string representation of an instance based on the class name and id.
         Usage: show <class name> <id>
         """
         args = shlex.split(arg)
-        if not args or len(args) < 1:
-            print("\033[91m** Class name missing. Usage: show <class name> <id> **\033[0m")
+        if len(args) == 0:
+            print("** class name missing **")
             return
         class_name = args[0]
-        if class_name not in storage.classes:
-            print("\033[91m** Class doesn't exist. **\033[0m")
+        if class_name not in self.valid_classes:
+            print("** class doesn't exist **")
             return
         if len(args) < 2:
-            print("\033[91m** Instance id missing. **\033[0m")
+            print("** instance id missing **")
             return
         instance_id = args[1]
-        key = "{}.{}".format(class_name, instance_id)
-        all_instances = storage.all()
-        if key not in all_instances:
-            print("\033[91m** No instance found. **\033[0m")
-            return
-        print(all_instances[key])
+        instance = self.find_instance(class_name, instance_id)
+        if instance:
+            print(instance)
+        else:
+            print("** no instance found **")
 
     def do_destroy(self, arg):
         """
-        Delete an instance based on the class name and id (save the change into the JSON file).
+        Deletes an instance based on the class name and id (save the change into the JSON file).
         Usage: destroy <class name> <id>
         """
         args = shlex.split(arg)
-        if not args or len(args) < 1:
-            print("\033[91m** Class name missing. Usage: destroy <class name> <id> **\033[0m")
+        if len(args) == 0:
+            print("** class name missing **")
             return
         class_name = args[0]
-        if class_name not in storage.classes:
-            print("\033[91m** Class doesn't exist. **\033[0m")
+        if class_name not in self.valid_classes:
+            print("** class doesn't exist **")
             return
         if len(args) < 2:
-            print("\033[91m** Instance id missing. **\033[0m")
+            print("** instance id missing **")
             return
         instance_id = args[1]
-        key = "{}.{}".format(class_name, instance_id)
-        all_instances = storage.all()
-        if key not in all_instances:
-            print("\033[91m** No instance found. **\033[0m")
-            return
-        del all_instances[key]
-        storage.save()
-        print("\033[92mInstance deleted successfully.\033[0m")
+        instance = self.find_instance(class_name, instance_id)
+        if instance:
+            del instance
+            print("Instance deleted")
+        else:
+            print("** no instance found **")
 
     def do_all(self, arg):
         """
-        Print all string representations of instances based or not on the class name.
-        Usage: all [class name]
+        Prints all string representation of all instances based or not on the class name.
+        Usage: all [<class name>]
         """
         args = shlex.split(arg)
-        all_instances = storage.all()
-        if not args:
-            print("\033[92m{}\033[0m".format([str(all_instances[key]) for key in all_instances]))
+        if len(args) == 0:
+            print(self.all_string_representation())
         else:
             class_name = args[0]
-            if class_name not in storage.classes:
-                print("\033[91m** Class doesn't exist. **\033[0m")
+            if class_name not in self.valid_classes:
+                print("** class doesn't exist **")
                 return
-            print("\033[92m{}\033[0m".format([str(all_instances[key]) for key in all_instances if key.startswith(class_name)]))
+            print(self.all_string_representation(class_name))
 
     def do_update(self, arg):
         """
-        Update an instance based on the class name and id by adding or updating an attribute
-        (save the change into the JSON file).
+        Updates an instance based on the class name and id by adding or updating attribute.
         Usage: update <class name> <id> <attribute name> "<attribute value>"
         """
         args = shlex.split(arg)
-        if not args or len(args) < 1:
-            print("\033[91m** Class name missing. Usage: update <class name> <id> <attribute name> \"<attribute value>\" **\033[0m")
+        if len(args) == 0:
+            print("** class name missing **")
             return
         class_name = args[0]
-        if class_name not in storage.classes:
-            print("\033[91m** Class doesn't exist. **\033[0m")
+        if class_name not in self.valid_classes:
+            print("** class doesn't exist **")
             return
         if len(args) < 2:
-            print("\033[91m** Instance id missing. **\033[0m")
+            print("** instance id missing **")
             return
         instance_id = args[1]
-        key = "{}.{}".format(class_name, instance_id)
-        all_instances = storage.all()
-        if key not in all_instances:
-            print("\033[91m** No instance found. **\033[0m")
+        instance = self.find_instance(class_name, instance_id)
+        if not instance:
+            print("** no instance found **")
             return
-        if len(args) < 3:
-            print("\033[91m** Attribute name missing. **\033[0m")
+        if len(args) < 4:
+            print("** attribute name missing **")
             return
         attribute_name = args[2]
-        if len(args) < 4:
-            print("\033[91m** Value missing. **\033[0m")
-            return
-        attribute_value = args[3].strip('"')
-        instance = all_instances[key]
-        try:
-            setattr(instance, attribute_name, eval(attribute_value))
-        except (AttributeError, NameError):
-            setattr(instance, attribute_name, attribute_value)
+        attribute_value = args[3]
+        setattr(instance, attribute_name, attribute_value)
         instance.save()
-        print("\033[92mAttribute updated successfully.\033[0m")
+
+    def find_instance(self, class_name, instance_id):
+        """
+        Finds an instance by class name and id.
+        """
+        try:
+            with open("file.json", "r") as file:
+                all_instances = json.load(file)
+                key = "{}.{}".format(class_name, instance_id)
+                return all_instances[key]
+        except FileNotFoundError:
+            return None
+        except KeyError:
+            return None
+
+    def all_string_representation(self, class_name=None):
+        """
+        Returns a list of string representations of all instances.
+        """
+        result = []
+        try:
+            with open("file.json", "r") as file:
+                all_instances = json.load(file)
+                if class_name:
+                    for key, value in all_instances.items():
+                        if class_name in key:
+                            result.append(str(value))
+                else:
+                    for value in all_instances.values():
+                        result.append(str(value))
+        except FileNotFoundError:
+            pass
+        return result
 
 if __name__ == '__main__':
     HBNBCommand().cmdloop()
