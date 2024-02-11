@@ -171,5 +171,4 @@ class HBNBCommand(cmd.Cmd):
         print("\033[92mAttribute updated successfully.\033[0m")
 
 if __name__ == '__main__':
-    print("\033[94mWelcome to AirBnB Console - Your Ultimate Command-Line Experience!\033[0m")
     HBNBCommand().cmdloop()
