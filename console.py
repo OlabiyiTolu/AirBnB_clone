@@ -22,7 +22,7 @@ class HBNBCommand(cmd.Cmd):
         """
         pass
 
-    def quit(self, arg):
+    def do_quit(self, arg):
         """
         Exit the AirBnB Console.
         """
@@ -35,7 +35,7 @@ class HBNBCommand(cmd.Cmd):
         """
         print("Exit the AirBnB Console.")
 
-    def EOF(self, arg):
+    def do_EOF(self, arg):
         """
         Exit on EOF (Ctrl-D).
         """
@@ -48,7 +48,7 @@ class HBNBCommand(cmd.Cmd):
         """
         print("Exit on EOF (Ctrl-D)")
 
-    def create(self, arg):
+    def do_create(self, arg):
         """
         Create a new instance of BaseModel, save it (to the JSON file), and print the id.
         Usage: create <class name>
@@ -65,7 +65,7 @@ class HBNBCommand(cmd.Cmd):
         new_instance.save()
         print("\033[92m{}\033[0m".format(new_instance.id))
 
-    def show(self, arg):
+    def do_show(self, arg):
         """
         Print the string representation of an instance based on the class name and id.
         Usage: show <class name> <id>
@@ -89,7 +89,7 @@ class HBNBCommand(cmd.Cmd):
             return
         print(all_instances[key])
 
-    def destroy(self, arg):
+    def do_destroy(self, arg):
         """
         Delete an instance based on the class name and id (save the change into the JSON file).
         Usage: destroy <class name> <id>
@@ -115,7 +115,7 @@ class HBNBCommand(cmd.Cmd):
         storage.save()
         print("\033[92mInstance deleted successfully.\033[0m")
 
-    def all(self, arg):
+    def do_all(self, arg):
         """
         Print all string representations of instances based or not on the class name.
         Usage: all [class name]
@@ -131,7 +131,7 @@ class HBNBCommand(cmd.Cmd):
                 return
             print("\033[92m{}\033[0m".format([str(all_instances[key]) for key in all_instances if key.startswith(class_name)]))
 
-    def update(self, arg):
+    def do_update(self, arg):
         """
         Update an instance based on the class name and id by adding or updating an attribute
         (save the change into the JSON file).
