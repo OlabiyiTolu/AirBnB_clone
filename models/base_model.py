@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This class defines a base model framework for other classes,
 providing common attributes and methods for basic data management.
@@ -5,6 +6,7 @@ providing common attributes and methods for basic data management.
 
 import uuid
 from datetime import datetime
+import models
 
 class BaseModel:
     """
@@ -28,7 +30,6 @@ class BaseModel:
         Assigns unique IDs and timestamps upon creation.
         """
         TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
-    # Handle initialization from dictionary argument
         if kwargs:
             for key, value in kwargs.items():
                 if key == "__class__":
@@ -41,7 +42,6 @@ class BaseModel:
                 else:
                     setattr(self, key, value)
 
-            # ID is only set if not provided in kwargs
             if "id" not in kwargs:
                 self.id = str(uuid.uuid4())
         else:
@@ -49,6 +49,7 @@ class BaseModel:
             
             self.created_at = datetime.now()
             self.updated_at = datetime.now()
+        models.storage.new(self)
 
     def save(self):
         """
@@ -57,6 +58,7 @@ class BaseModel:
         Used to indicate when an object's information has been modified.
         """
         self.updated_at = datetime.now()
+        models.storage.save()
 
     def to_dict(self):
         """
